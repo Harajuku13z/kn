@@ -206,7 +206,7 @@
                         <div class="order-item">
                             <div>
                                 @if(is_array($article))
-                                    {{ $article['name'] ?? $article }}
+                                    {{ is_string($article['name'] ?? $article) ? e($article['name'] ?? $article) : '' }}
                                     @if(isset($article['quantity']) && $article['quantity'] > 1)
                                         <span class="text-muted">(x{{ $article['quantity'] }})</span>
                                     @endif
@@ -214,7 +214,7 @@
                                         <small class="text-muted">{{ number_format($article['weight'], 1, ',', ' ') }} kg</small>
                                     @endif
                                 @else
-                                    {{ $article }}
+                                    {{ is_string($article) ? e($article) : '' }}
                                 @endif
                             </div>
                         </div>

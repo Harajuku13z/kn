@@ -468,6 +468,14 @@
                             Gestion des Abonnements
                             </a>
                         </li>
+                        
+                    <!-- Quotas -->
+                        <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.quotas.*') ? 'active' : '' }}" href="{{ route('admin.quotas.index') }}">
+                            <i class="fas fa-fw fa-weight me-2"></i>
+                            Gestion des Quotas
+                            </a>
+                        </li>
                     
                     <!-- Codes Promo -->
                         <li class="nav-item">

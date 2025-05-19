@@ -132,6 +132,13 @@ class OrderController extends Controller
     {
         $user = User::findOrFail($userId);
         $addresses = \App\Models\Address::with('city')->where('user_id', $userId)->get();
+        
+        // Si l'utilisateur n'a pas d'adresse, le rediriger pour en créer une
+        if ($addresses->isEmpty()) {
+            return redirect()->route('admin.addresses.create', ['user_id' => $userId])
+                ->with('info', 'Vous devez créer au moins une adresse avant de passer commande.');
+        }
+        
         $currentPrice = \App\Models\PriceConfiguration::getCurrentPricePerKg(1000);
         
         // Récupérer les articles de la table articles
@@ -168,10 +175,50 @@ class OrderController extends Controller
             $deliveryFeesByDistrict[$key] = $fee->fee;
         }
         
+        // Récupérer tous les articles disponibles (pour la compatibilité avec la vue front-end)
+        $articles = \App\Models\Article::all();
+        
+        // Définir les créneaux horaires disponibles (pour la compatibilité avec la vue front-end)
+        $timeSlots = [
+            '08:00-10:00' => '08:00 - 10:00',
+            '10:00-12:00' => '10:00 - 12:00',
+            '14:00-16:00' => '14:00 - 16:00',
+            '16:00-18:00' => '16:00 - 18:00'
+        ];
+        
+        // Récupérer les codes promo disponibles (pour la compatibilité avec la vue front-end)
+        $availableCoupons = \App\Models\Coupon::getAvailableForUser($userId);
+        
+        // Informations de quota (pour la compatibilité avec la vue front-end)
+        $totalQuota = $user->getTotalAvailableQuota() ?? 0;
+        $isPendingQuota = false;
+        
+        // Panier temporaire (pour la compatibilité avec la vue front-end)
+        $tempCart = [
+            'step' => 1,
+            'collection_address_id' => null,
+            'collection_date' => date('Y-m-d'),
+            'collection_time_slot' => null,
+            'same_address_for_delivery' => false,
+            'delivery_address_id' => null,
+            'articles' => [],
+            'payment_method' => 'cash'
+        ];
+        
+        // Prix au kilo (pour la compatibilité avec la vue front-end)
+        $laundryPricePerKg = $currentPrice;
+        
+        // Utiliser la vue admin dédiée qui reprend le design du frontend mais avec le layout admin
         return view('admin.orders.create_quota_form', compact(
-            'user', 
+            'user',
+            'articles', 
             'addresses', 
-            'currentPrice',
+            'laundryPricePerKg', 
+            'totalQuota', 
+            'isPendingQuota',
+            'tempCart',
+            'timeSlots',
+            'availableCoupons',
             'clothingArticles',
             'householdArticles',
             'defaultDeliveryFee',

@@ -63,11 +63,11 @@ class QuotaController extends Controller
         // Création du quota
         $quota = new \App\Models\Quota();
         $quota->user_id = $request->user_id;
-        $quota->kilograms = $request->kilograms;
-        $quota->kilograms_used = 0;
+        $quota->total_kg = $request->kilograms;
+        $quota->used_kg = 0;
         $quota->expiration_date = $request->expiration_date;
-        $quota->status = $request->status;
-        $quota->notes = $request->notes;
+        $quota->is_active = $request->status === 'active';
+        $quota->price = $request->kilograms * \App\Models\PriceConfiguration::getCurrentPricePerKg(1000);
         $quota->save();
         
         return redirect()->route('admin.quotas.index')->with('success', 'Quota créé avec succès.');
@@ -110,20 +110,20 @@ class QuotaController extends Controller
         // Validation des données
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'kilograms' => 'required|numeric|min:1',
-            'kilograms_used' => 'required|numeric|min:0',
+            'total_kg' => 'required|numeric|min:1',
+            'used_kg' => 'required|numeric|min:0',
             'expiration_date' => 'required|date',
-            'status' => 'required|in:active,inactive,expired',
+            'is_active' => 'required|boolean',
         ]);
         
         // Mise à jour du quota
         $quota = \App\Models\Quota::findOrFail($id);
         $quota->user_id = $request->user_id;
-        $quota->kilograms = $request->kilograms;
-        $quota->kilograms_used = $request->kilograms_used;
+        $quota->total_kg = $request->total_kg;
+        $quota->used_kg = $request->used_kg;
         $quota->expiration_date = $request->expiration_date;
-        $quota->status = $request->status;
-        $quota->notes = $request->notes;
+        $quota->is_active = $request->is_active;
+        $quota->price = $request->total_kg * \App\Models\PriceConfiguration::getCurrentPricePerKg(1000);
         $quota->save();
         
         return redirect()->route('admin.quotas.index')->with('success', 'Quota mis à jour avec succès.');
