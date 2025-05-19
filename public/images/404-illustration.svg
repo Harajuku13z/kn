@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fond -->
+    <rect x="50" y="50" width="300" height="200" rx="20" fill="#FFFFFF" stroke="#FF6B6B" stroke-width="2"/>
+    
+    <!-- Texte 404 stylisé -->
+    <text x="200" y="150" font-family="Arial" font-size="80" font-weight="bold" fill="#FF6B6B" text-anchor="middle">404</text>
+    
+    <!-- Icône de recherche -->
+    <circle cx="280" cy="100" r="30" fill="none" stroke="#2C3E50" stroke-width="2"/>
+    <line x1="300" y1="120" x2="320" y2="140" stroke="#2C3E50" stroke-width="2"/>
+    
+    <!-- Points de suspension -->
+    <circle cx="120" cy="200" r="5" fill="#7F8C8D"/>
+    <circle cx="140" cy="200" r="5" fill="#7F8C8D"/>
+    <circle cx="160" cy="200" r="5" fill="#7F8C8D"/>
+</svg> 

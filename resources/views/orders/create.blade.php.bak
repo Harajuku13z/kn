@@ -1,0 +1,2021 @@
+@extends('layouts.dashboard')
+
+@section('title', 'Créer une nouvelle commande - KLINKLIN')
+
+@push('styles')
+{{-- <link rel="stylesheet" href="{{ asset('css/orders.css') }}"> --}}
+<style>
+    :root {
+        --klin-primary: #4A148C;
+        --klin-primary-dark: #38006b;
+        --klin-secondary: #f26d50; /* Orange/Corail */
+        --klin-light-bg: #f8f5fc;
+        --klin-border-color: #e0d8e7;
+        --klin-text-muted: #6c757d;
+        --klin-success: #28a745;
+        --klin-warning: #ffc107;
+        --klin-danger: #dc3545;
+        --klin-info: #0dcaf0;
+        --klin-input-bg: #fff; /* Fond des inputs */
+    }
+    .order-creation-page .display-5 { font-size: 2.25rem; }
+    .text-klin-primary { color: var(--klin-primary) !important; }
+    .klin-btn {
+        background-color: var(--klin-primary) !important;
+        border-color: var(--klin-primary) !important;
+        color: white !important;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+    }
+    .klin-btn:hover {
+        background-color: var(--klin-primary-dark) !important;
+        border-color: var(--klin-primary-dark) !important;
+        transform: translateY(-2px);
+    }
+    .klin-btn-outline {
+        color: var(--klin-primary) !important;
+        border-color: var(--klin-primary) !important;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+    }
+    .klin-btn-outline:hover {
+        background-color: var(--klin-primary) !important;
+        color: white !important;
+    }
+    .form-step h2 .bi { color: var(--klin-primary); }
+    .form-label { font-weight: 500; color: #333; }
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+        border: 1px solid var(--klin-border-color);
+        background-color: var(--klin-input-bg);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--klin-primary);
+        box-shadow: 0 0 0 0.25rem rgba(74, 20, 140, 0.25);
+    }
+    .progress-bar-custom { margin-bottom: 3rem !important; }
+    .progress-bar-custom .step-custom {
+        flex-basis: 100px; flex-shrink: 0; color: var(--klin-text-muted); font-size: 0.85em;
+    }
+    .progress-bar-custom .step-icon {
+        width: 35px; height: 35px; border-radius: 50%; background-color: #e0e0e0;
+        color: white; display: flex; justify-content: center; align-items: center;
+        margin: 0 auto 8px auto; border: 2px solid #e0e0e0; font-weight: bold;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .progress-bar-custom .step-icon span { font-size: 0.9rem; }
+    .progress-bar-custom .step-custom.active .step-icon { background-color: var(--klin-primary); border-color: var(--klin-primary); }
+    .progress-bar-custom .step-custom.active .step-text { color: var(--klin-primary); font-weight: bold; }
+    .progress-bar-custom .step-custom.completed .step-icon { background-color: var(--klin-success); border-color: var(--klin-success); }
+    .progress-bar-custom .step-custom.completed .step-text { color: var(--klin-success); }
+    .progress-bar-custom .progress-line-custom {
+        height: 4px; background-color: #e0e0e0; margin-top: 17px;
+        transition: background-color 0.3s ease;
+    }
+    .progress-bar-custom .progress-line-custom.active { background-color: var(--klin-primary); }
+    #articlesContainer .article-item .card {
+        border: 1px solid var(--klin-border-color);
+        border-radius: 0.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #articlesContainer .article-item .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
+    }
+    #articlesContainer .card-title { font-size: 1rem; font-weight: 600; color: var(--klin-primary);}
+    #articlesContainer .quantity-selector input { border-left: none; border-right: none;}
+    #articlesContainer .quantity-selector .btn { border-color: #ced4da; }
+    #step-4 .card { border-left: 3px solid var(--klin-primary); margin-bottom: 1.5rem !important; }
+    #step-4 .card-header { background-color: var(--klin-light-bg); border-bottom: 1px solid var(--klin-border-color); }
+    #step-4 .card-header h5 { font-weight: 600; color: var(--klin-primary); }
+    #summary-items td, #summary-items th { padding: 0.5rem; font-size:0.9rem; }
+    #summary-total { font-size: 1.25rem; color: var(--klin-primary); }
+    #step-5 .form-check-label { display: flex; align-items: center; font-size: 1rem; padding: 0.75rem; border: 1px solid var(--klin-border-color); border-radius: 0.375rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+    #step-5 .form-check-label:hover { background-color: var(--klin-light-bg); }
+    #step-5 .form-check-input:checked + .form-check-label { background-color: var(--klin-light-bg); border-color: var(--klin-primary); color: var(--klin-primary); font-weight: 500; }
+    #step-5 .form-check-input { display: none; }
+    #step-5 .form-check-label .bi { font-size: 1.5rem; color: var(--klin-primary); }
+    .card.shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .address-selector { margin-bottom: 1rem; }
+    .address-selector .form-select { margin-bottom: 0.5rem; }
+    .new-address-form { /* Ce style pourrait ne plus être utilisé si les formulaires inline sont abandonnés */
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--klin-border-color);
+        border-radius: 0.5rem;
+        background-color: var(--klin-light-bg);
+    }
+    .new-address-form.active { display: block; }
+    .btn-add-address { margin-top: 0.5rem; }
+
+    /* Style pour les messages d'erreur de validation */
+    .invalid-feedback.d-block {
+        display: block !important; /* S'assurer que le message d'erreur Bootstrap est visible */
+        width: 100%;
+        margin-top: .25rem;
+        font-size: .875em;
+        color: #dc3545; /* Couleur de danger Bootstrap */
+    }
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid order-creation-page">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="display-5 fw-bold text-klin-primary">Créer une Nouvelle Commande</h1>
+        </div>
+    </div>
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            <strong>Erreur :</strong> {!! nl2br(e(session('error'))) !!}
+        </div>
+    @endif
+
+    @if($errors->any()) {{-- Sera utile si la soumission AJAX échoue et qu'une redirection classique se produit --}}
+        <div class="alert alert-danger">
+            <strong>Erreurs de validation :</strong>
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="progress-bar-custom d-flex justify-content-between align-items-start mb-5">
+        <div class="step-custom text-center active" data-step="1">
+            <div class="step-icon"><span>1</span></div>
+            <div class="step-text">Collecte</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="2">
+            <div class="step-icon"><span>2</span></div>
+            <div class="step-text">Livraison</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="3">
+            <div class="step-icon"><span>3</span></div>
+            <div class="step-text">Articles</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="4">
+            <div class="step-icon"><span>4</span></div>
+            <div class="step-text">Récapitulatif</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="5">
+            <div class="step-icon"><span>5</span></div>
+            <div class="step-text">Paiement</div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-lg-5 p-4">
+            {{-- Assurez-vous d'avoir la balise meta CSRF dans votre layout principal (ex: layouts.dashboard) --}}
+            {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
+            <form id="multiStepForm" action="{{ route('orders.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="delivery_date" name="delivery_date" value="">
+                <input type="hidden" name="form_submitted" value="true">
+                {{-- Étape 1: Collecte --}}
+                <div class="form-step active" id="step-1">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Planifier votre Collecte <i class="bi bi-calendar-check-fill"></i></h2>
+                        <p class="text-muted">Indiquez où et quand nous pouvons récupérer votre linge.</p>
+                    </div>
+
+                    <div class="mb-3"> {{-- Envelopper dans mb-3 pour l'affichage des erreurs --}}
+                        <label for="collection_address_id" class="form-label">Sélectionner une adresse de collecte <span class="text-danger">*</span></label>
+                        @php $hasAddresses = $addresses && count($addresses) > 0; @endphp
+                        @if($hasAddresses)
+                            <select class="form-select" id="collection_address_id" name="collection_address_id" required>
+                                <option value="">Sélectionner ou créer une nouvelle adresse</option>
+                                @foreach($addresses as $address)
+                                    <option value="{{ $address->id }}" data-address="{{ $address->address }}" data-city="{{ $address->city }}">
+                                        {{ $address->name }} - {{ $address->address }}, {{ $address->neighborhood }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="mt-2">
+                                <small>Ou</small> <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Créer une nouvelle adresse de collecte
+                                </a>
+                            </div>
+                        @else
+                            <p>Aucune adresse enregistrée.</p>
+                            <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Créer une adresse de collecte
+                            </a>
+                        @endif
+                    </div>
+                     <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="collection_date" class="form-label">Date de collecte <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="collection_date" name="collection_date" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="collection_time_slot" class="form-label">Créneau horaire <span class="text-danger">*</span></label>
+                            <select class="form-select" id="collection_time_slot" name="collection_time_slot" required>
+                                <option value="" disabled selected>Sélectionnez un créneau</option>
+                                <option value="08:00-10:00">08:00 - 10:00</option>
+                                <option value="10:00-12:00">10:00 - 12:00</option>
+                                <option value="14:00-16:00">14:00 - 16:00</option>
+                                <option value="16:00-18:00">16:00 - 18:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 2: Livraison --}}
+                <div class="form-step" id="step-2">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Adresse de Livraison <i class="bi bi-truck"></i></h2>
+                        <p class="text-muted">Indiquez où nous devons livrer votre linge.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="same_address_for_delivery" name="same_address_for_delivery">
+                            <label class="form-check-label" for="same_address_for_delivery">
+                                Même adresse que la collecte
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="delivery-address-fields">
+                         <div class="mb-3"> {{-- Envelopper dans mb-3 pour l'affichage des erreurs --}}
+                            <label for="delivery_address_id" class="form-label">Sélectionner une adresse de livraison <span class="text-danger">*</span></label>
+                            @if($hasAddresses)
+                                <select class="form-select" id="delivery_address_id" name="delivery_address_id" required>
+                                     <option value="">Sélectionner ou créer une nouvelle adresse</option>
+                                    @foreach($addresses as $address)
+                                        <option value="{{ $address->id }}" data-address="{{ $address->address }}" data-city="{{ $address->city }}">
+                                            {{ $address->name }} - {{ $address->address }}, {{ $address->neighborhood }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                 <div class="mt-2">
+                                    <small>Ou</small> <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Créer une nouvelle adresse de livraison
+                                    </a>
+                                </div>
+                            @else
+                                <p>Aucune adresse enregistrée.</p>
+                                <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Créer une adresse de livraison
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <div class="card bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-klin-primary"><i class="bi bi-info-circle me-2"></i>Information sur la livraison</h5>
+                            <p class="card-text">
+                                La livraison peut être programmée à partir du jour suivant la collecte.
+                            </p>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="delivery_date" class="form-label">Date de livraison <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="delivery_date_input" name="delivery_date" required>
+                                    <small class="text-muted">Date minimum : le lendemain de la collecte</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="delivery_time_slot" class="form-label">Créneau horaire de livraison <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="delivery_time_slot" name="delivery_time_slot" required>
+                                        <option value="" disabled selected>Sélectionnez un créneau</option>
+                                        <option value="08:00-10:00">08:00 - 10:00</option>
+                                        <option value="10:00-12:00">10:00 - 12:00</option>
+                                        <option value="14:00-16:00">14:00 - 16:00</option>
+                                        <option value="16:00-18:00">16:00 - 18:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 3: Articles --}}
+                <div class="form-step" id="step-3">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Sélectionnez vos articles <i class="bi bi-bag"></i></h2>
+                        <p class="text-muted">Choisissez les articles à laver et leur quantité.</p>
+                    </div>
+
+                    <div class="row" id="articlesContainer">
+                        @if($articles && count($articles) > 0)
+                            @foreach($articles as $article)
+                            <div class="col-md-4 mb-4 article-item">
+                                <div class="card h-100">
+                                    <img src="{{ asset($article->image_path ?? 'img/default-article.png') }}" class="card-img-top" alt="{{ $article->name }}" style="height: 180px; object-fit: cover;">
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">{{ $article->name }}</h5>
+                                        <p class="card-text">
+                                            <small class="text-muted">Poids estimé: {{ $article->average_weight }} kg/unité</small><br>
+                                            <small class="text-muted">Prix estimé/unité: <span class="text-klin-primary fw-bold">{{ number_format($article->average_weight * ($laundryPricePerKg ?? 500), 0, ',', ' ') }} FCFA</span></small>
+                                        </p>
+                                        <div class="quantity-selector d-flex align-items-center mt-auto">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-minus">-</button>
+                                            <input type="number" class="form-control text-center mx-1 item-quantity" name="articles[{{ $article->id }}][quantity]" value="0" min="0" data-price="{{ $article->price_text }}" data-weight="{{ $article->average_weight }}">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-plus">+</button>
+                                        </div>
+                                        <input type="hidden" name="articles[{{ $article->id }}][name]" value="{{ $article->name }}">
+                                        <input type="hidden" name="articles[{{ $article->id }}][price_per_kg]" value="{{ $laundryPricePerKg ?? 500 }}">
+                                        <input type="hidden" name="articles[{{ $article->id }}][average_weight]" value="{{ $article->average_weight }}">
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        @else
+                            <p class="text-center text-muted">Aucun article disponible pour le moment.</p>
+                        @endif
+                    </div>
+                     @if($articles && count($articles) > 0)
+                    <div class="card mt-4 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-klin-primary">Simulateur de prix</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Poids total estimé: <strong id="totalWeightDisplay">0.00</strong> kg</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Prix total estimé: <strong id="estimatedPriceDisplay">0</strong> FCFA</p>
+                                </div>
+                            </div>
+                            <small class="text-muted">Le prix final sera calculé après pesée réelle de vos articles.</small>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Étape 4: Récapitulatif --}}
+                <div class="form-step" id="step-4">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Récapitulatif de votre commande <i class="bi bi-check-circle"></i></h2>
+                        <p class="text-muted">Vérifiez les détails de votre commande avant de continuer.</p>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Adresse de collecte</h5>
+                        </div>
+                        <div class="card-body" id="summary-collection-address">
+                            <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Adresse de livraison</h5>
+                        </div>
+                        <div class="card-body" id="summary-delivery-address">
+                           <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+                     <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Date et Heure de Collecte</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0"><strong id="summary-collection-date"></strong> à <strong id="summary-collection-time"></strong></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Articles sélectionnés</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table" id="summary-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Article</th>
+                                            <th class="text-center">Quantité</th>
+                                            <th class="text-center">Poids Est. (kg)</th>
+                                            <th class="text-end">Prix Est. (FCFA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{-- Rempli par JavaScript --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <hr>
+                            <div class="text-end">
+                                <h5>Total Estimé: <span id="summary-grand-total-display" class="text-klin-primary">0</span> FCFA</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Date et Heure de Livraison</h5>
+                        </div>
+                        <div class="card-body" id="summary-delivery-date-time">
+                            <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 5: Paiement --}}
+                <div class="form-step" id="step-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Mode de paiement <i class="bi bi-credit-card"></i></h2>
+                        <p class="text-muted">Choisissez votre mode de paiement.</p>
+                    </div>
+                    <p class="text-center fs-4">Total à payer (estimation): <strong id="payment-total-display" class="text-klin-primary">0 FCFA</strong></p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div id="quota_payment_section_wrapper" class="mb-3"> {{-- Wrapper pour la logique d'affichage --}}
+                                <div id="quota_payment_section" class="form-check" style="display: none;"> {{-- Caché par défaut, affiché par JS si quota > 0 --}}
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_quota" value="quota" required>
+                                    <label class="form-check-label" for="payment_quota">
+                                        <i class="bi bi-gem me-2 text-klin-primary"></i>
+                                        Paiement par abonnement (quota)
+                                        <small class="d-block text-muted">
+                                            Quota disponible: <span id="quota_available_display">0</span> kg.
+                                            <span id="quota_message" class="d-block"></span>
+                                        </small>
+                                    </label>
+                                </div>
+                                <div id="subscribe_button" class="mt-2" style="display: none;"> {{-- Caché par défaut, affiché par JS si quota = 0 --}}
+                                    <p class="text-muted mb-1">Vous n'avez pas d'abonnement actif ou de quota suffisant.</p>
+                                    <a href="{{ route('subscriptions.index') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-plus-circle me-2"></i>Voir les abonnements
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="cash" required checked>
+                                <label class="form-check-label" for="payment_cash">
+                                    <i class="bi bi-cash-coin me-2 text-klin-primary"></i>
+                                    Paiement à la livraison
+                                    <small class="d-block text-muted">Payez en espèces lorsque nous récupérons ou livrons votre linge.</small>
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment_mobile_money" value="mobile_money" required disabled>
+                                <label class="form-check-label" for="payment_mobile_money">
+                                    <i class="bi bi-phone-fill me-2 text-klin-primary"></i>
+                                    Mobile Money
+                                    <small class="d-block text-muted">Service temporairement indisponible.</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+                    <button type="button" class="btn klin-btn-outline prev-step" style="display: none;">
+                        <i class="bi bi-arrow-left me-2"></i>Précédent
+                    </button>
+                    <button type="button" class="btn klin-btn next-step ms-auto">
+                        Suivant<i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const steps = Array.from(document.querySelectorAll('.form-step'));
+        const prevButton = document.querySelector('.prev-step');
+        const nextButton = document.querySelector('.next-step');
+        const multiStepForm = document.getElementById('multiStepForm');
+        let currentStepIndex = 0;
+        
+        // Récupérer les données temporaires du panier depuis PHP
+        const tempCart = @json($tempCart ?? null);
+
+        const collectionAddressSelect = document.getElementById('collection_address_id');
+        const deliveryAddressSelect = document.getElementById('delivery_address_id');
+        const sameAddressCheckbox = document.getElementById('same_address_for_delivery');
+        const deliveryAddressFieldsDiv = document.getElementById('delivery-address-fields');
+
+        const articlesContainer = document.getElementById('articlesContainer');
+        const totalWeightDisplay = document.getElementById('totalWeightDisplay');
+        const estimatedPriceDisplay = document.getElementById('estimatedPriceDisplay');
+
+        const summaryCollectionAddress = document.getElementById('summary-collection-address');
+        const summaryDeliveryAddress = document.getElementById('summary-delivery-address');
+        const summaryCollectionDate = document.getElementById('summary-collection-date');
+        const summaryCollectionTime = document.getElementById('summary-collection-time');
+        const summaryItemsTbody = document.querySelector('#summary-items-table tbody');
+        const summaryGrandTotalDisplay = document.getElementById('summary-grand-total-display');
+
+        const paymentTotalDisplay = document.getElementById('payment-total-display');
+        const quotaPaymentSectionWrapper = document.getElementById('quota_payment_section_wrapper');
+        const quotaPaymentSectionDiv = document.getElementById('quota_payment_section');
+        const quotaAvailableDisplay = document.getElementById('quota_available_display');
+        const quotaMessage = document.getElementById('quota_message');
+        const subscribeButtonDiv = document.getElementById('subscribe_button');
+        const paymentQuotaRadio = document.getElementById('payment_quota');
+
+
+        const PRICE_PER_KG = parseFloat("{{ $laundryPricePerKg ?? 500 }}");
+        const USER_QUOTA_KG = parseFloat("{{ $totalQuota ?? 0 }}");
+
+        // Gestion des boutons + et - pour la quantité d'articles
+        articlesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quantity-plus')) {
+                const input = e.target.previousElementSibling;
+                input.value = parseInt(input.value) + 1;
+                updateTotal();
+            } else if (e.target.classList.contains('quantity-minus')) {
+                const input = e.target.nextElementSibling;
+                let val = parseInt(input.value) - 1;
+                input.value = val < 0 ? 0 : val;
+                updateTotal();
+            }
+        });
+        articlesContainer.addEventListener('input', function(e) {
+            if (e.target.classList.contains('item-quantity')) {
+                if (parseInt(e.target.value) < 0) e.target.value = 0;
+                updateTotal();
+            }
+        });
+
+        // Fonction pour sauvegarder les données temporaires
+        function saveTemporaryData(clearData = false) {
+            if (clearData) {
+                fetch('{{ route('orders.save_temp') }}', {
+                    method: 'POST',
+                    body: JSON.stringify({ clear: true }),
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => console.log('Données temporaires effacées'))
+                .catch(error => console.error('Erreur:', error));
+                return;
+            }
+            
+            // Code existant pour la sauvegarde
+            const formData = new FormData(multiStepForm);
+            formData.append('step', currentStepIndex);
+            
+            // Ajouter les articles sélectionnés
+            let articlesPayload = {};
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const inputQty = item.querySelector('.item-quantity');
+                const articleId = inputQty.name.match(/articles\[(\d+)\]/)[1];
+                const quantity = parseInt(inputQty.value);
+                if (quantity > 0) {
+                    articlesPayload[articleId] = {
+                        quantity: quantity
+                    };
+                }
+            });
+            
+            formData.append('articles', JSON.stringify(articlesPayload));
+            
+            fetch('{{ route('orders.save_temp') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la sauvegarde des données temporaires');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Données temporaires sauvegardées');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        function showStep(index) {
+            steps.forEach((step, i) => step.classList.toggle('active', i === index));
+            currentStepIndex = index;
+            updateProgressBar();
+            updateNavigationButtons();
+
+            if (index === 1) { // Étape Livraison
+                updateDeliveryDate();
+            }
+            if (index === 3) { // Étape Récapitulatif
+                updateSummaryDisplay();
+            }
+            if (index === 4) { // Étape Paiement
+                updatePaymentTotalDisplay();
+                manageQuotaPaymentVisibility();
+            }
+            
+            // Sauvegarder les données après chaque changement d'étape
+            saveTemporaryData();
+        }
+
+        function updateProgressBar() {
+            const progressSteps = document.querySelectorAll('.progress-bar-custom .step-custom');
+            const progressLines = document.querySelectorAll('.progress-bar-custom .progress-line-custom');
+            progressSteps.forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i < currentStepIndex) step.classList.add('completed');
+                else if (i === currentStepIndex) step.classList.add('active');
+            });
+            progressLines.forEach((line, i) => {
+                line.classList.toggle('active', i < currentStepIndex);
+            });
+        }
+
+        function updateNavigationButtons() {
+            prevButton.style.display = currentStepIndex === 0 ? 'none' : 'inline-block';
+            if (currentStepIndex === steps.length - 1) {
+                nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                nextButton.type = 'submit';
+            } else {
+                nextButton.innerHTML = 'Suivant <i class="bi bi-arrow-right ms-2"></i>';
+                nextButton.type = 'button';
+            }
+        }
+
+        function updateTotal() {
+            let totalWeight = 0;
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                if (quantity > 0) totalWeight += weightPerUnit * quantity;
+            });
+
+            const estimatedPrice = Math.round(totalWeight * PRICE_PER_KG);
+
+            if(totalWeightDisplay) totalWeightDisplay.textContent = totalWeight.toFixed(2);
+            if(estimatedPriceDisplay) estimatedPriceDisplay.textContent = estimatedPrice.toLocaleString('fr-FR');
+
+            if (currentStepIndex >= 3) updateSummaryDisplay(); // Mettre à jour le récap si on est dessus ou après
+            if (currentStepIndex === 4) updatePaymentTotalDisplay(); // Mettre à jour le total sur la page paiement
+        }
+
+        function validateCurrentStep() {
+            const currentStep = steps[currentStepIndex];
+            let isValid = true;
+            currentStep.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            currentStep.querySelectorAll('.invalid-feedback.d-block').forEach(el => el.remove());
+
+            // Validation spéciale pour l'étape de paiement (dernière étape)
+            if (currentStepIndex === 4) { // Étape de paiement
+                // Vérifier qu'une méthode de paiement est sélectionnée
+                const paymentMethodSelected = currentStep.querySelector('input[name="payment_method"]:checked');
+                if (!paymentMethodSelected) {
+                    isValid = false;
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger mt-3';
+                    errorDiv.textContent = 'Veuillez sélectionner une méthode de paiement.';
+                    currentStep.querySelector('.row.justify-content-center').appendChild(errorDiv);
+                }
+                return isValid;
+            }
+
+            currentStep.querySelectorAll('[required]:not([disabled])').forEach(input => {
+                const isVisible = input.offsetWidth > 0 || input.offsetHeight > 0 || input.getClientRects().length > 0 || input.tagName === 'SELECT';
+                if (!isVisible && input.type !== 'radio') return; // Les radios peuvent être requis même si cachés par le style du label
+
+                let parentErrorContainer = input.closest('.mb-3') || input.closest('.form-check') || input.parentElement;
+
+                if ((input.type === 'checkbox' && !input.checked) || (input.type !== 'checkbox' && !input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerText = (input.type === 'checkbox' || input.type === 'radio') ? 'Veuillez faire une sélection.' : 'Ce champ est requis.';
+                    parentErrorContainer.appendChild(div);
+                }
+            });
+             // Validation spécifique pour l'étape des articles (au moins un article)
+            if (currentStepIndex === 2) { // Étape des articles
+                let totalQuantity = 0;
+                articlesContainer.querySelectorAll('.item-quantity').forEach(input => {
+                    totalQuantity += parseInt(input.value) || 0;
+                });
+                if (totalQuantity === 0) {
+                    isValid = false;
+                    // Afficher une erreur globale pour l'étape des articles si nécessaire
+                    if (!document.getElementById('articles-error-message')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.id = 'articles-error-message';
+                        errorDiv.className = 'alert alert-danger mt-3';
+                        errorDiv.textContent = 'Veuillez sélectionner au moins un article.';
+                        articlesContainer.parentNode.insertBefore(errorDiv, articlesContainer.nextSibling.nextSibling); // Avant le simulateur de prix
+                    }
+                } else {
+                    const existingError = document.getElementById('articles-error-message');
+                    if (existingError) existingError.remove();
+                }
+            } else {
+                 const existingError = document.getElementById('articles-error-message');
+                 if (existingError) existingError.remove();
+            }
+
+            return isValid;
+        }
+
+        nextButton.addEventListener('click', function() {
+            if (this.type === 'button') {
+                if (validateCurrentStep()) {
+                    if (currentStepIndex < steps.length - 1) {
+                        saveTemporaryData(); // Sauvegarder avant de passer à l'étape suivante
+                        showStep(currentStepIndex + 1);
+                    }
+                }
+            }
+        });
+
+        prevButton.addEventListener('click', function() {
+            if (currentStepIndex > 0) {
+                saveTemporaryData(); // Sauvegarder avant de revenir à l'étape précédente
+                showStep(currentStepIndex - 1);
+            }
+        });
+
+        multiStepForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            console.log('Form submission started');
+            
+            // Forcer la mise à jour des valeurs cachées avant validation
+            const deliveryDateInput = document.getElementById('delivery_date_input');
+            const hiddenDeliveryDate = document.getElementById('delivery_date');
+            if (deliveryDateInput && hiddenDeliveryDate) {
+                hiddenDeliveryDate.value = deliveryDateInput.value;
+            }
+            
+            if (!validateCurrentStep()) {
+                console.log('Validation failed');
+                alert("Veuillez corriger les erreurs dans le formulaire avant de soumettre.");
+                return;
+            }
+            
+            // Désactiver le bouton de soumission et afficher un indicateur de chargement
+            nextButton.disabled = true;
+            nextButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Traitement en cours...';
+            console.log('Submit button disabled, showing spinner');
+            
+            // Préparer les données de formulaire manuellement pour éviter les problèmes de formatage
+            const formData = new FormData();
+            
+            // Ajouter le token CSRF
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            
+            // Ajouter les champs standards
+            formData.append('collection_address_id', document.getElementById('collection_address_id').value);
+            formData.append('collection_date', document.getElementById('collection_date').value);
+            formData.append('collection_time_slot', document.getElementById('collection_time_slot').value);
+            formData.append('delivery_date', deliveryDateInput.value);
+            formData.append('delivery_time_slot', document.getElementById('delivery_time_slot').value);
+            formData.append('form_submitted', 'true');
+            
+            // Ajouter same_address_for_delivery si coché
+            const sameAddressChecked = document.getElementById('same_address_for_delivery').checked;
+            if (sameAddressChecked) {
+                formData.append('same_address_for_delivery', 'on');
+            } else if (document.getElementById('delivery_address_id')) {
+                formData.append('delivery_address_id', document.getElementById('delivery_address_id').value);
+            }
+            
+            // Ajouter la méthode de paiement
+            const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (selectedPaymentMethod) {
+                formData.append('payment_method', selectedPaymentMethod.value);
+            }
+            
+            // Ajouter les articles
+            let hasArticles = false;
+            let totalWeightForOrder = 0;
+            
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const inputQty = item.querySelector('.item-quantity');
+                if (!inputQty) return;
+                
+                const articleIdMatch = inputQty.name.match(/articles\[(\d+)\]/);
+                if (!articleIdMatch || !articleIdMatch[1]) return;
+                
+                const articleId = articleIdMatch[1];
+                const quantity = parseInt(inputQty.value) || 0;
+                const weightPerUnit = parseFloat(inputQty.dataset.weight) || 0;
+                
+                if (quantity > 0) {
+                    hasArticles = true;
+                    formData.append(`articles[${articleId}][quantity]`, quantity);
+                    totalWeightForOrder += weightPerUnit * quantity;
+                }
+            });
+            
+            if (!hasArticles) {
+                alert("Veuillez sélectionner au moins un article.");
+                nextButton.disabled = false;
+                nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                return;
+            }
+            
+            // Vérification du quota si cette méthode de paiement est sélectionnée
+            if (selectedPaymentMethod && selectedPaymentMethod.value === 'quota') {
+                if (USER_QUOTA_KG < totalWeightForOrder) {
+                    alert("Votre quota disponible est insuffisant pour le poids total estimé de cette commande.");
+                    nextButton.disabled = false;
+                    nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                    return;
+                }
+            }
+            
+            // Utiliser l'API Fetch avec les bons headers pour soumettre le formulaire
+            fetch('{{ route('orders.store') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+@extends('layouts.dashboard')
+
+@section('title', 'Créer une nouvelle commande - KLINKLIN')
+
+@push('styles')
+{{-- <link rel="stylesheet" href="{{ asset('css/orders.css') }}"> --}}
+<style>
+    :root {
+        --klin-primary: #4A148C;
+        --klin-primary-dark: #38006b;
+        --klin-secondary: #f26d50; /* Orange/Corail */
+        --klin-light-bg: #f8f5fc;
+        --klin-border-color: #e0d8e7;
+        --klin-text-muted: #6c757d;
+        --klin-success: #28a745;
+        --klin-warning: #ffc107;
+        --klin-danger: #dc3545;
+        --klin-info: #0dcaf0;
+        --klin-input-bg: #fff; /* Fond des inputs */
+    }
+    .order-creation-page .display-5 { font-size: 2.25rem; }
+    .text-klin-primary { color: var(--klin-primary) !important; }
+    .klin-btn {
+        background-color: var(--klin-primary) !important;
+        border-color: var(--klin-primary) !important;
+        color: white !important;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+    }
+    .klin-btn:hover {
+        background-color: var(--klin-primary-dark) !important;
+        border-color: var(--klin-primary-dark) !important;
+        transform: translateY(-2px);
+    }
+    .klin-btn-outline {
+        color: var(--klin-primary) !important;
+        border-color: var(--klin-primary) !important;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+    }
+    .klin-btn-outline:hover {
+        background-color: var(--klin-primary) !important;
+        color: white !important;
+    }
+    .form-step h2 .bi { color: var(--klin-primary); }
+    .form-label { font-weight: 500; color: #333; }
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+        border: 1px solid var(--klin-border-color);
+        background-color: var(--klin-input-bg);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--klin-primary);
+        box-shadow: 0 0 0 0.25rem rgba(74, 20, 140, 0.25);
+    }
+    .progress-bar-custom { margin-bottom: 3rem !important; }
+    .progress-bar-custom .step-custom {
+        flex-basis: 100px; flex-shrink: 0; color: var(--klin-text-muted); font-size: 0.85em;
+    }
+    .progress-bar-custom .step-icon {
+        width: 35px; height: 35px; border-radius: 50%; background-color: #e0e0e0;
+        color: white; display: flex; justify-content: center; align-items: center;
+        margin: 0 auto 8px auto; border: 2px solid #e0e0e0; font-weight: bold;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .progress-bar-custom .step-icon span { font-size: 0.9rem; }
+    .progress-bar-custom .step-custom.active .step-icon { background-color: var(--klin-primary); border-color: var(--klin-primary); }
+    .progress-bar-custom .step-custom.active .step-text { color: var(--klin-primary); font-weight: bold; }
+    .progress-bar-custom .step-custom.completed .step-icon { background-color: var(--klin-success); border-color: var(--klin-success); }
+    .progress-bar-custom .step-custom.completed .step-text { color: var(--klin-success); }
+    .progress-bar-custom .progress-line-custom {
+        height: 4px; background-color: #e0e0e0; margin-top: 17px;
+        transition: background-color 0.3s ease;
+    }
+    .progress-bar-custom .progress-line-custom.active { background-color: var(--klin-primary); }
+    #articlesContainer .article-item .card {
+        border: 1px solid var(--klin-border-color);
+        border-radius: 0.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #articlesContainer .article-item .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
+    }
+    #articlesContainer .card-title { font-size: 1rem; font-weight: 600; color: var(--klin-primary);}
+    #articlesContainer .quantity-selector input { border-left: none; border-right: none;}
+    #articlesContainer .quantity-selector .btn { border-color: #ced4da; }
+    #step-4 .card { border-left: 3px solid var(--klin-primary); margin-bottom: 1.5rem !important; }
+    #step-4 .card-header { background-color: var(--klin-light-bg); border-bottom: 1px solid var(--klin-border-color); }
+    #step-4 .card-header h5 { font-weight: 600; color: var(--klin-primary); }
+    #summary-items td, #summary-items th { padding: 0.5rem; font-size:0.9rem; }
+    #summary-total { font-size: 1.25rem; color: var(--klin-primary); }
+    #step-5 .form-check-label { display: flex; align-items: center; font-size: 1rem; padding: 0.75rem; border: 1px solid var(--klin-border-color); border-radius: 0.375rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+    #step-5 .form-check-label:hover { background-color: var(--klin-light-bg); }
+    #step-5 .form-check-input:checked + .form-check-label { background-color: var(--klin-light-bg); border-color: var(--klin-primary); color: var(--klin-primary); font-weight: 500; }
+    #step-5 .form-check-input { display: none; }
+    #step-5 .form-check-label .bi { font-size: 1.5rem; color: var(--klin-primary); }
+    .card.shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .address-selector { margin-bottom: 1rem; }
+    .address-selector .form-select { margin-bottom: 0.5rem; }
+    .new-address-form { /* Ce style pourrait ne plus être utilisé si les formulaires inline sont abandonnés */
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--klin-border-color);
+        border-radius: 0.5rem;
+        background-color: var(--klin-light-bg);
+    }
+    .new-address-form.active { display: block; }
+    .btn-add-address { margin-top: 0.5rem; }
+
+    /* Style pour les messages d'erreur de validation */
+    .invalid-feedback.d-block {
+        display: block !important; /* S'assurer que le message d'erreur Bootstrap est visible */
+        width: 100%;
+        margin-top: .25rem;
+        font-size: .875em;
+        color: #dc3545; /* Couleur de danger Bootstrap */
+    }
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid order-creation-page">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="display-5 fw-bold text-klin-primary">Créer une Nouvelle Commande</h1>
+        </div>
+    </div>
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            <strong>Erreur :</strong> {!! nl2br(e(session('error'))) !!}
+        </div>
+    @endif
+
+    @if($errors->any()) {{-- Sera utile si la soumission AJAX échoue et qu'une redirection classique se produit --}}
+        <div class="alert alert-danger">
+            <strong>Erreurs de validation :</strong>
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="progress-bar-custom d-flex justify-content-between align-items-start mb-5">
+        <div class="step-custom text-center active" data-step="1">
+            <div class="step-icon"><span>1</span></div>
+            <div class="step-text">Collecte</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="2">
+            <div class="step-icon"><span>2</span></div>
+            <div class="step-text">Livraison</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="3">
+            <div class="step-icon"><span>3</span></div>
+            <div class="step-text">Articles</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="4">
+            <div class="step-icon"><span>4</span></div>
+            <div class="step-text">Récapitulatif</div>
+        </div>
+        <div class="progress-line-custom flex-grow-1"></div>
+        <div class="step-custom text-center" data-step="5">
+            <div class="step-icon"><span>5</span></div>
+            <div class="step-text">Paiement</div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-lg-5 p-4">
+            {{-- Assurez-vous d'avoir la balise meta CSRF dans votre layout principal (ex: layouts.dashboard) --}}
+            {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
+            <form id="multiStepForm" action="{{ route('orders.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="delivery_date" name="delivery_date" value="">
+                <input type="hidden" name="form_submitted" value="true">
+                {{-- Étape 1: Collecte --}}
+                <div class="form-step active" id="step-1">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Planifier votre Collecte <i class="bi bi-calendar-check-fill"></i></h2>
+                        <p class="text-muted">Indiquez où et quand nous pouvons récupérer votre linge.</p>
+                    </div>
+
+                    <div class="mb-3"> {{-- Envelopper dans mb-3 pour l'affichage des erreurs --}}
+                        <label for="collection_address_id" class="form-label">Sélectionner une adresse de collecte <span class="text-danger">*</span></label>
+                        @php $hasAddresses = $addresses && count($addresses) > 0; @endphp
+                        @if($hasAddresses)
+                            <select class="form-select" id="collection_address_id" name="collection_address_id" required>
+                                <option value="">Sélectionner ou créer une nouvelle adresse</option>
+                                @foreach($addresses as $address)
+                                    <option value="{{ $address->id }}" data-address="{{ $address->address }}" data-city="{{ $address->city }}">
+                                        {{ $address->name }} - {{ $address->address }}, {{ $address->neighborhood }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="mt-2">
+                                <small>Ou</small> <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Créer une nouvelle adresse de collecte
+                                </a>
+                            </div>
+                        @else
+                            <p>Aucune adresse enregistrée.</p>
+                            <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Créer une adresse de collecte
+                            </a>
+                        @endif
+                    </div>
+                     <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="collection_date" class="form-label">Date de collecte <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="collection_date" name="collection_date" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="collection_time_slot" class="form-label">Créneau horaire <span class="text-danger">*</span></label>
+                            <select class="form-select" id="collection_time_slot" name="collection_time_slot" required>
+                                <option value="" disabled selected>Sélectionnez un créneau</option>
+                                <option value="08:00-10:00">08:00 - 10:00</option>
+                                <option value="10:00-12:00">10:00 - 12:00</option>
+                                <option value="14:00-16:00">14:00 - 16:00</option>
+                                <option value="16:00-18:00">16:00 - 18:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 2: Livraison --}}
+                <div class="form-step" id="step-2">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Adresse de Livraison <i class="bi bi-truck"></i></h2>
+                        <p class="text-muted">Indiquez où nous devons livrer votre linge.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="same_address_for_delivery" name="same_address_for_delivery">
+                            <label class="form-check-label" for="same_address_for_delivery">
+                                Même adresse que la collecte
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="delivery-address-fields">
+                         <div class="mb-3"> {{-- Envelopper dans mb-3 pour l'affichage des erreurs --}}
+                            <label for="delivery_address_id" class="form-label">Sélectionner une adresse de livraison <span class="text-danger">*</span></label>
+                            @if($hasAddresses)
+                                <select class="form-select" id="delivery_address_id" name="delivery_address_id" required>
+                                     <option value="">Sélectionner ou créer une nouvelle adresse</option>
+                                    @foreach($addresses as $address)
+                                        <option value="{{ $address->id }}" data-address="{{ $address->address }}" data-city="{{ $address->city }}">
+                                            {{ $address->name }} - {{ $address->address }}, {{ $address->neighborhood }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                 <div class="mt-2">
+                                    <small>Ou</small> <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Créer une nouvelle adresse de livraison
+                                    </a>
+                                </div>
+                            @else
+                                <p>Aucune adresse enregistrée.</p>
+                                <a href="{{ route('addresses.create', ['redirect_to_order_creation' => true]) }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Créer une adresse de livraison
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <div class="card bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-klin-primary"><i class="bi bi-info-circle me-2"></i>Information sur la livraison</h5>
+                            <p class="card-text">
+                                La livraison peut être programmée à partir du jour suivant la collecte.
+                            </p>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="delivery_date" class="form-label">Date de livraison <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="delivery_date_input" name="delivery_date" required>
+                                    <small class="text-muted">Date minimum : le lendemain de la collecte</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="delivery_time_slot" class="form-label">Créneau horaire de livraison <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="delivery_time_slot" name="delivery_time_slot" required>
+                                        <option value="" disabled selected>Sélectionnez un créneau</option>
+                                        <option value="08:00-10:00">08:00 - 10:00</option>
+                                        <option value="10:00-12:00">10:00 - 12:00</option>
+                                        <option value="14:00-16:00">14:00 - 16:00</option>
+                                        <option value="16:00-18:00">16:00 - 18:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 3: Articles --}}
+                <div class="form-step" id="step-3">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Sélectionnez vos articles <i class="bi bi-bag"></i></h2>
+                        <p class="text-muted">Choisissez les articles à laver et leur quantité.</p>
+                    </div>
+
+                    <div class="row" id="articlesContainer">
+                        @if($articles && count($articles) > 0)
+                            @foreach($articles as $article)
+                            <div class="col-md-4 mb-4 article-item">
+                                <div class="card h-100">
+                                    <img src="{{ asset($article->image_path ?? 'img/default-article.png') }}" class="card-img-top" alt="{{ $article->name }}" style="height: 180px; object-fit: cover;">
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">{{ $article->name }}</h5>
+                                        <p class="card-text">
+                                            <small class="text-muted">Poids estimé: {{ $article->average_weight }} kg/unité</small><br>
+                                            <small class="text-muted">Prix estimé/unité: <span class="text-klin-primary fw-bold">{{ number_format($article->average_weight * ($laundryPricePerKg ?? 500), 0, ',', ' ') }} FCFA</span></small>
+                                        </p>
+                                        <div class="quantity-selector d-flex align-items-center mt-auto">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-minus">-</button>
+                                            <input type="number" class="form-control text-center mx-1 item-quantity" name="articles[{{ $article->id }}][quantity]" value="0" min="0" data-price="{{ $article->price_text }}" data-weight="{{ $article->average_weight }}">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-plus">+</button>
+                                        </div>
+                                        <input type="hidden" name="articles[{{ $article->id }}][name]" value="{{ $article->name }}">
+                                        <input type="hidden" name="articles[{{ $article->id }}][price_per_kg]" value="{{ $laundryPricePerKg ?? 500 }}">
+                                        <input type="hidden" name="articles[{{ $article->id }}][average_weight]" value="{{ $article->average_weight }}">
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        @else
+                            <p class="text-center text-muted">Aucun article disponible pour le moment.</p>
+                        @endif
+                    </div>
+                     @if($articles && count($articles) > 0)
+                    <div class="card mt-4 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-klin-primary">Simulateur de prix</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Poids total estimé: <strong id="totalWeightDisplay">0.00</strong> kg</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Prix total estimé: <strong id="estimatedPriceDisplay">0</strong> FCFA</p>
+                                </div>
+                            </div>
+                            <small class="text-muted">Le prix final sera calculé après pesée réelle de vos articles.</small>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Étape 4: Récapitulatif --}}
+                <div class="form-step" id="step-4">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Récapitulatif de votre commande <i class="bi bi-check-circle"></i></h2>
+                        <p class="text-muted">Vérifiez les détails de votre commande avant de continuer.</p>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Adresse de collecte</h5>
+                        </div>
+                        <div class="card-body" id="summary-collection-address">
+                            <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Adresse de livraison</h5>
+                        </div>
+                        <div class="card-body" id="summary-delivery-address">
+                           <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+                     <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Date et Heure de Collecte</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0"><strong id="summary-collection-date"></strong> à <strong id="summary-collection-time"></strong></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Articles sélectionnés</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table" id="summary-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Article</th>
+                                            <th class="text-center">Quantité</th>
+                                            <th class="text-center">Poids Est. (kg)</th>
+                                            <th class="text-end">Prix Est. (FCFA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{-- Rempli par JavaScript --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <hr>
+                            <div class="text-end">
+                                <h5>Total Estimé: <span id="summary-grand-total-display" class="text-klin-primary">0</span> FCFA</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-klin-primary">Date et Heure de Livraison</h5>
+                        </div>
+                        <div class="card-body" id="summary-delivery-date-time">
+                            <p class="mb-0"><i>À définir</i></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Étape 5: Paiement --}}
+                <div class="form-step" id="step-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fs-3 fw-bold">Mode de paiement <i class="bi bi-credit-card"></i></h2>
+                        <p class="text-muted">Choisissez votre mode de paiement.</p>
+                    </div>
+                    <p class="text-center fs-4">Total à payer (estimation): <strong id="payment-total-display" class="text-klin-primary">0 FCFA</strong></p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div id="quota_payment_section_wrapper" class="mb-3"> {{-- Wrapper pour la logique d'affichage --}}
+                                <div id="quota_payment_section" class="form-check" style="display: none;"> {{-- Caché par défaut, affiché par JS si quota > 0 --}}
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_quota" value="quota" required>
+                                    <label class="form-check-label" for="payment_quota">
+                                        <i class="bi bi-gem me-2 text-klin-primary"></i>
+                                        Paiement par abonnement (quota)
+                                        <small class="d-block text-muted">
+                                            Quota disponible: <span id="quota_available_display">0</span> kg.
+                                            <span id="quota_message" class="d-block"></span>
+                                        </small>
+                                    </label>
+                                </div>
+                                <div id="subscribe_button" class="mt-2" style="display: none;"> {{-- Caché par défaut, affiché par JS si quota = 0 --}}
+                                    <p class="text-muted mb-1">Vous n'avez pas d'abonnement actif ou de quota suffisant.</p>
+                                    <a href="{{ route('subscriptions.index') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-plus-circle me-2"></i>Voir les abonnements
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="cash" required checked>
+                                <label class="form-check-label" for="payment_cash">
+                                    <i class="bi bi-cash-coin me-2 text-klin-primary"></i>
+                                    Paiement à la livraison
+                                    <small class="d-block text-muted">Payez en espèces lorsque nous récupérons ou livrons votre linge.</small>
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment_mobile_money" value="mobile_money" required disabled>
+                                <label class="form-check-label" for="payment_mobile_money">
+                                    <i class="bi bi-phone-fill me-2 text-klin-primary"></i>
+                                    Mobile Money
+                                    <small class="d-block text-muted">Service temporairement indisponible.</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+                    <button type="button" class="btn klin-btn-outline prev-step" style="display: none;">
+                        <i class="bi bi-arrow-left me-2"></i>Précédent
+                    </button>
+                    <button type="button" class="btn klin-btn next-step ms-auto">
+                        Suivant<i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const steps = Array.from(document.querySelectorAll('.form-step'));
+        const prevButton = document.querySelector('.prev-step');
+        const nextButton = document.querySelector('.next-step');
+        const multiStepForm = document.getElementById('multiStepForm');
+        let currentStepIndex = 0;
+        
+        // Récupérer les données temporaires du panier depuis PHP
+        const tempCart = @json($tempCart ?? null);
+
+        const collectionAddressSelect = document.getElementById('collection_address_id');
+        const deliveryAddressSelect = document.getElementById('delivery_address_id');
+        const sameAddressCheckbox = document.getElementById('same_address_for_delivery');
+        const deliveryAddressFieldsDiv = document.getElementById('delivery-address-fields');
+
+        const articlesContainer = document.getElementById('articlesContainer');
+        const totalWeightDisplay = document.getElementById('totalWeightDisplay');
+        const estimatedPriceDisplay = document.getElementById('estimatedPriceDisplay');
+
+        const summaryCollectionAddress = document.getElementById('summary-collection-address');
+        const summaryDeliveryAddress = document.getElementById('summary-delivery-address');
+        const summaryCollectionDate = document.getElementById('summary-collection-date');
+        const summaryCollectionTime = document.getElementById('summary-collection-time');
+        const summaryItemsTbody = document.querySelector('#summary-items-table tbody');
+        const summaryGrandTotalDisplay = document.getElementById('summary-grand-total-display');
+
+        const paymentTotalDisplay = document.getElementById('payment-total-display');
+        const quotaPaymentSectionWrapper = document.getElementById('quota_payment_section_wrapper');
+        const quotaPaymentSectionDiv = document.getElementById('quota_payment_section');
+        const quotaAvailableDisplay = document.getElementById('quota_available_display');
+        const quotaMessage = document.getElementById('quota_message');
+        const subscribeButtonDiv = document.getElementById('subscribe_button');
+        const paymentQuotaRadio = document.getElementById('payment_quota');
+
+
+        const PRICE_PER_KG = parseFloat("{{ $laundryPricePerKg ?? 500 }}");
+        const USER_QUOTA_KG = parseFloat("{{ $totalQuota ?? 0 }}");
+
+        // Gestion des boutons + et - pour la quantité d'articles
+        articlesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quantity-plus')) {
+                const input = e.target.previousElementSibling;
+                input.value = parseInt(input.value) + 1;
+                updateTotal();
+            } else if (e.target.classList.contains('quantity-minus')) {
+                const input = e.target.nextElementSibling;
+                let val = parseInt(input.value) - 1;
+                input.value = val < 0 ? 0 : val;
+                updateTotal();
+            }
+        });
+        articlesContainer.addEventListener('input', function(e) {
+            if (e.target.classList.contains('item-quantity')) {
+                if (parseInt(e.target.value) < 0) e.target.value = 0;
+                updateTotal();
+            }
+        });
+
+        // Fonction pour sauvegarder les données temporaires
+        function saveTemporaryData(clearData = false) {
+            if (clearData) {
+                fetch('{{ route('orders.save_temp') }}', {
+                    method: 'POST',
+                    body: JSON.stringify({ clear: true }),
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => console.log('Données temporaires effacées'))
+                .catch(error => console.error('Erreur:', error));
+                return;
+            }
+            
+            // Code existant pour la sauvegarde
+            const formData = new FormData(multiStepForm);
+            formData.append('step', currentStepIndex);
+            
+            // Ajouter les articles sélectionnés
+            let articlesPayload = {};
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const inputQty = item.querySelector('.item-quantity');
+                const articleId = inputQty.name.match(/articles\[(\d+)\]/)[1];
+                const quantity = parseInt(inputQty.value);
+                if (quantity > 0) {
+                    articlesPayload[articleId] = {
+                        quantity: quantity
+                    };
+                }
+            });
+            
+            formData.append('articles', JSON.stringify(articlesPayload));
+            
+            fetch('{{ route('orders.save_temp') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la sauvegarde des données temporaires');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Données temporaires sauvegardées');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        function showStep(index) {
+            steps.forEach((step, i) => step.classList.toggle('active', i === index));
+            currentStepIndex = index;
+            updateProgressBar();
+            updateNavigationButtons();
+
+            if (index === 1) { // Étape Livraison
+                updateDeliveryDate();
+            }
+            if (index === 3) { // Étape Récapitulatif
+                updateSummaryDisplay();
+            }
+            if (index === 4) { // Étape Paiement
+                updatePaymentTotalDisplay();
+                manageQuotaPaymentVisibility();
+            }
+            
+            // Sauvegarder les données après chaque changement d'étape
+            saveTemporaryData();
+        }
+
+        function updateProgressBar() {
+            const progressSteps = document.querySelectorAll('.progress-bar-custom .step-custom');
+            const progressLines = document.querySelectorAll('.progress-bar-custom .progress-line-custom');
+            progressSteps.forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i < currentStepIndex) step.classList.add('completed');
+                else if (i === currentStepIndex) step.classList.add('active');
+            });
+            progressLines.forEach((line, i) => {
+                line.classList.toggle('active', i < currentStepIndex);
+            });
+        }
+
+        function updateNavigationButtons() {
+            prevButton.style.display = currentStepIndex === 0 ? 'none' : 'inline-block';
+            if (currentStepIndex === steps.length - 1) {
+                nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                nextButton.type = 'submit';
+            } else {
+                nextButton.innerHTML = 'Suivant <i class="bi bi-arrow-right ms-2"></i>';
+                nextButton.type = 'button';
+            }
+        }
+
+        function updateTotal() {
+            let totalWeight = 0;
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                if (quantity > 0) totalWeight += weightPerUnit * quantity;
+            });
+
+            const estimatedPrice = Math.round(totalWeight * PRICE_PER_KG);
+
+            if(totalWeightDisplay) totalWeightDisplay.textContent = totalWeight.toFixed(2);
+            if(estimatedPriceDisplay) estimatedPriceDisplay.textContent = estimatedPrice.toLocaleString('fr-FR');
+
+            if (currentStepIndex >= 3) updateSummaryDisplay(); // Mettre à jour le récap si on est dessus ou après
+            if (currentStepIndex === 4) updatePaymentTotalDisplay(); // Mettre à jour le total sur la page paiement
+        }
+
+        function validateCurrentStep() {
+            const currentStep = steps[currentStepIndex];
+            let isValid = true;
+            currentStep.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            currentStep.querySelectorAll('.invalid-feedback.d-block').forEach(el => el.remove());
+
+            // Validation spéciale pour l'étape de paiement (dernière étape)
+            if (currentStepIndex === 4) { // Étape de paiement
+                // Vérifier qu'une méthode de paiement est sélectionnée
+                const paymentMethodSelected = currentStep.querySelector('input[name="payment_method"]:checked');
+                if (!paymentMethodSelected) {
+                    isValid = false;
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger mt-3';
+                    errorDiv.textContent = 'Veuillez sélectionner une méthode de paiement.';
+                    currentStep.querySelector('.row.justify-content-center').appendChild(errorDiv);
+                }
+                return isValid;
+            }
+
+            currentStep.querySelectorAll('[required]:not([disabled])').forEach(input => {
+                const isVisible = input.offsetWidth > 0 || input.offsetHeight > 0 || input.getClientRects().length > 0 || input.tagName === 'SELECT';
+                if (!isVisible && input.type !== 'radio') return; // Les radios peuvent être requis même si cachés par le style du label
+
+                let parentErrorContainer = input.closest('.mb-3') || input.closest('.form-check') || input.parentElement;
+
+                if ((input.type === 'checkbox' && !input.checked) || (input.type !== 'checkbox' && !input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerText = (input.type === 'checkbox' || input.type === 'radio') ? 'Veuillez faire une sélection.' : 'Ce champ est requis.';
+                    parentErrorContainer.appendChild(div);
+                }
+            });
+             // Validation spécifique pour l'étape des articles (au moins un article)
+            if (currentStepIndex === 2) { // Étape des articles
+                let totalQuantity = 0;
+                articlesContainer.querySelectorAll('.item-quantity').forEach(input => {
+                    totalQuantity += parseInt(input.value) || 0;
+                });
+                if (totalQuantity === 0) {
+                    isValid = false;
+                    // Afficher une erreur globale pour l'étape des articles si nécessaire
+                    if (!document.getElementById('articles-error-message')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.id = 'articles-error-message';
+                        errorDiv.className = 'alert alert-danger mt-3';
+                        errorDiv.textContent = 'Veuillez sélectionner au moins un article.';
+                        articlesContainer.parentNode.insertBefore(errorDiv, articlesContainer.nextSibling.nextSibling); // Avant le simulateur de prix
+                    }
+                } else {
+                    const existingError = document.getElementById('articles-error-message');
+                    if (existingError) existingError.remove();
+                }
+            } else {
+                 const existingError = document.getElementById('articles-error-message');
+                 if (existingError) existingError.remove();
+            }
+
+            return isValid;
+        }
+
+        nextButton.addEventListener('click', function() {
+            if (this.type === 'button') {
+                if (validateCurrentStep()) {
+                    if (currentStepIndex < steps.length - 1) {
+                        saveTemporaryData(); // Sauvegarder avant de passer à l'étape suivante
+                        showStep(currentStepIndex + 1);
+                    }
+                }
+            }
+        });
+
+        prevButton.addEventListener('click', function() {
+            if (currentStepIndex > 0) {
+                saveTemporaryData(); // Sauvegarder avant de revenir à l'étape précédente
+                showStep(currentStepIndex - 1);
+            }
+        });
+
+        multiStepForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            console.log('Form submission started');
+
+            if (!validateCurrentStep()) {
+                console.log('Validation failed');
+                alert("Veuillez corriger les erreurs dans le formulaire avant de soumettre.");
+                return;
+            }
+
+            // Désactiver le bouton de soumission et afficher un indicateur de chargement
+            nextButton.disabled = true;
+            nextButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Traitement en cours...';
+            console.log('Submit button disabled, showing spinner');
+
+            // Mise à jour du champ caché de la date de livraison
+            const deliveryDateInput = document.getElementById('delivery_date_input');
+            const hiddenDeliveryDate = document.getElementById('delivery_date');
+            if (deliveryDateInput && hiddenDeliveryDate) {
+                hiddenDeliveryDate.value = deliveryDateInput.value;
+            }
+
+            // Calcul du poids total
+            let totalWeightForOrder = 0;
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                if (quantity > 0) totalWeightForOrder += weightPerUnit * quantity;
+            });
+
+            // Vérification du quota si sélectionné
+            if (paymentQuotaRadio && paymentQuotaRadio.checked) {
+                if (USER_QUOTA_KG < totalWeightForOrder) {
+                    alert("Votre quota disponible est insuffisant pour le poids total estimé de cette commande.");
+                    nextButton.disabled = false;
+                    nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                    return;
+                }
+            }
+
+            const formData = new FormData(this);
+
+            // Construction des données d'articles dans un format compatible
+            document.querySelectorAll('#articlesContainer .article-item').forEach(item => {
+                const inputQty = item.querySelector('.item-quantity');
+                if (!inputQty) return;
+                
+                const articleIdMatch = inputQty.name.match(/articles\[(\d+)\]/);
+                if (!articleIdMatch || !articleIdMatch[1]) return;
+                
+                const articleId = articleIdMatch[1];
+                const quantity = parseInt(inputQty.value) || 0;
+                
+                if (quantity > 0) {
+                    // Format simplifié pour éviter les problèmes de parsing
+                    formData.delete(`articles[${articleId}][quantity]`);
+                    formData.append(`articles[${articleId}][quantity]`, quantity);
+                }
+            });
+
+            // Utiliser l'API Fetch avec les bons headers
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response received', response.status, response.statusText);
+                // Vérifier si la réponse est de type JSON
+                const contentType = response.headers.get("content-type");
+                console.log('Content-Type:', contentType);
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    // Si la réponse n'est pas JSON, convertir en texte et gérer l'erreur
+                    return response.text().then(text => {
+                        console.error('Non-JSON response:', text.substring(0, 500));
+                        throw new Error(`Réponse non-JSON reçue: ${text.substring(0, 100)}...`);
+                    });
+                }
+            })
+            .then(data => {
+                console.log('Parsed response data:', data);
+                // Succès - réponse JSON valide
+                if (data.success) {
+                    console.log('Success response, redirecting to', data.redirect);
+                    // Vider le panier temporaire
+                    saveTemporaryData(true); // true = effacer les données
+                    
+                    // Rediriger directement sans afficher de message
+                    window.location.href = data.redirect || '/orders';
+                } else {
+                    // Erreur applicative dans un format JSON valide
+                    console.error('Error in response:', data.message);
+                    nextButton.disabled = false;
+                    nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                    alert(data.message || 'Une erreur est survenue lors de la création de la commande.');
+                }
+            })
+            .catch(error => {
+                // Erreur de requête ou de parsing JSON
+                console.error('Fetch or parsing error:', error);
+                nextButton.disabled = false;
+                nextButton.innerHTML = 'Valider la commande <i class="bi bi-check-lg ms-2"></i>';
+                
+                // Message d'erreur détaillé pour aider au debug
+                alert(`Erreur: ${error.message || 'Une erreur est survenue lors de la communication avec le serveur.'}\n\nVeuillez réessayer ou contacter le support si le problème persiste.`);
+            });
+        });
+
+        // --- Gestion des adresses ---
+        if (sameAddressCheckbox) {
+            sameAddressCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                deliveryAddressFieldsDiv.style.display = isChecked ? 'none' : 'block';
+                if (deliveryAddressSelect) {
+                    deliveryAddressSelect.required = !isChecked;
+                    if (isChecked) deliveryAddressSelect.value = ''; // Clear selection if same as collection
+                }
+            });
+            // Initial state for delivery address fields
+            deliveryAddressFieldsDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
+            if (deliveryAddressSelect) deliveryAddressSelect.required = !sameAddressCheckbox.checked;
+
+        }
+
+
+        // --- Mise à jour du Récapitulatif ---
+        function updateSummaryDisplay() {
+            let collAddrText = "Non spécifiée";
+            if (collectionAddressSelect && collectionAddressSelect.value) {
+                collAddrText = collectionAddressSelect.options[collectionAddressSelect.selectedIndex].text;
+            }
+            summaryCollectionAddress.innerHTML = `<p class="mb-0">${collAddrText}</p>`;
+
+            let delAddrText = "Non spécifiée";
+            if (sameAddressCheckbox.checked) {
+                delAddrText = `Même que la collecte`;
+            } else if (deliveryAddressSelect && deliveryAddressSelect.value) {
+                delAddrText = deliveryAddressSelect.options[deliveryAddressSelect.selectedIndex].text;
+            }
+            summaryDeliveryAddress.innerHTML = `<p class="mb-0">${delAddrText}</p>`;
+
+            summaryCollectionDate.textContent = document.getElementById('collection_date').value ? new Date(document.getElementById('collection_date').value).toLocaleDateString('fr-FR') : 'Non définie';
+            summaryCollectionTime.textContent = document.getElementById('collection_time_slot').value || 'Non défini';
+
+            // Récupérer les informations de livraison
+            const deliveryDate = document.getElementById('delivery_date_input').value 
+                ? new Date(document.getElementById('delivery_date_input').value).toLocaleDateString('fr-FR') 
+                : 'Non définie';
+            const deliveryTimeSlot = document.getElementById('delivery_time_slot').value || 'Non défini';
+
+            // Mettre à jour les informations de livraison dans le récapitulatif
+            const summaryDeliveryDateTimeDiv = document.getElementById('summary-delivery-date-time');
+            if (summaryDeliveryDateTimeDiv) {
+                summaryDeliveryDateTimeDiv.innerHTML = `
+                    <p class="mb-0">Date: <strong>${deliveryDate}</strong></p>
+                    <p class="mb-0">Créneau: <strong>${deliveryTimeSlot}</strong></p>
+                `;
+            }
+
+            summaryItemsTbody.innerHTML = '';
+            let currentOrderTotalWeight = 0;
+            let currentOrderTotalPrice = 0;
+
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                if (quantity > 0) {
+                    const name = item.querySelector('.card-title').textContent;
+                    const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                    const itemTotalWeight = weightPerUnit * quantity;
+                    const itemTotalPrice = Math.round(itemTotalWeight * PRICE_PER_KG);
+
+                    currentOrderTotalWeight += itemTotalWeight;
+                    currentOrderTotalPrice += itemTotalPrice;
+
+                    const row = summaryItemsTbody.insertRow();
+                    row.innerHTML = `
+                        <td>${name}</td>
+                        <td class="text-center">${quantity}</td>
+                        <td class="text-center">${itemTotalWeight.toFixed(2)}</td>
+                        <td class="text-end">${itemTotalPrice.toLocaleString('fr-FR')}</td>`;
+                }
+            });
+            if (summaryItemsTbody.rows.length === 0) {
+                summaryItemsTbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted"><i>Aucun article sélectionné.</i></td></tr>`;
+            }
+            summaryGrandTotalDisplay.textContent = currentOrderTotalPrice.toLocaleString('fr-FR');
+        }
+
+        function updatePaymentTotalDisplay() {
+            let totalWeight = 0;
+             articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                if (quantity > 0) totalWeight += weightPerUnit * quantity;
+            });
+            const estimatedPrice = Math.round(totalWeight * PRICE_PER_KG);
+            paymentTotalDisplay.textContent = estimatedPrice.toLocaleString('fr-FR') + ' FCFA';
+        }
+
+        function manageQuotaPaymentVisibility() {
+            let totalWeightForOrder = 0;
+            articlesContainer.querySelectorAll('.article-item').forEach(item => {
+                const quantityInput = item.querySelector('.item-quantity');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const weightPerUnit = parseFloat(quantityInput.dataset.weight) || 0;
+                if (quantity > 0) totalWeightForOrder += weightPerUnit * quantity;
+            });
+
+            if (USER_QUOTA_KG > 0) {
+                quotaPaymentSectionDiv.style.display = 'block';
+                subscribeButtonDiv.style.display = 'none';
+                quotaAvailableDisplay.textContent = USER_QUOTA_KG.toFixed(2) + ' kg';
+                
+                if (paymentQuotaRadio) {
+                    paymentQuotaRadio.disabled = false;
+                    
+                    // Vérifier si le quota est validé ou en attente
+                    const isPendingQuota = {{ $isPendingQuota ?? 'false' }};
+                    
+                    if (isPendingQuota) {
+                        quotaMessage.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> Le livreur encaissera votre abonnement lors de la collecte.</span>`;
+                    } else if (USER_QUOTA_KG >= totalWeightForOrder) {
+                        quotaMessage.innerHTML = `<span class="text-success">Votre quota est suffisant pour couvrir les ${totalWeightForOrder.toFixed(2)} kg estimés.</span>`;
+                    } else {
+                        quotaMessage.innerHTML = `<span class="text-danger">Quota insuffisant pour les ${totalWeightForOrder.toFixed(2)} kg estimés. Le paiement par quota sera désactivé si sélectionné.</span>`;
+                        paymentQuotaRadio.disabled = true;
+                    }
+
+                    // Si le quota est insuffisant et que le radio quota est coché, décocher et cocher cash
+                    if(paymentQuotaRadio.disabled && paymentQuotaRadio.checked){
+                        paymentQuotaRadio.checked = false;
+                        document.getElementById('payment_cash').checked = true;
+                    }
+                }
+            } else {
+                quotaPaymentSectionDiv.style.display = 'none';
+                subscribeButtonDiv.style.display = 'block';
+                if (paymentQuotaRadio) {
+                    paymentQuotaRadio.disabled = true;
+                    if (paymentQuotaRadio.checked) { // Si par hasard il était coché
+                         paymentQuotaRadio.checked = false;
+                         document.getElementById('payment_cash').checked = true;
+                    }
+                }
+            }
+        }
+
+        // Initialiser avec les données temporaires si disponibles
+        function initFromTempCart() {
+            if (!tempCart) return;
+            
+            // Définir l'étape actuelle
+            if (tempCart.step && tempCart.step > 0 && tempCart.step < steps.length) {
+                currentStepIndex = parseInt(tempCart.step);
+            }
+            
+            // Initialiser les adresses
+            if (collectionAddressSelect && tempCart.collection_address_id) {
+                collectionAddressSelect.value = tempCart.collection_address_id;
+            }
+            
+            if (sameAddressCheckbox) {
+                sameAddressCheckbox.checked = !!tempCart.same_address_for_delivery;
+                if (deliveryAddressFieldsDiv) {
+                    deliveryAddressFieldsDiv.style.display = sameAddressCheckbox.checked ? 'none' : 'block';
+                }
+            }
+            
+            if (deliveryAddressSelect && tempCart.delivery_address_id && !tempCart.same_address_for_delivery) {
+                deliveryAddressSelect.value = tempCart.delivery_address_id;
+            }
+            
+            // Initialiser la date et le créneau
+            const collectionDateInput = document.getElementById('collection_date');
+            if (collectionDateInput && tempCart.collection_date) {
+                collectionDateInput.value = tempCart.collection_date;
+            }
+            
+            const collectionTimeSlotSelect = document.getElementById('collection_time_slot');
+            if (collectionTimeSlotSelect && tempCart.collection_time_slot) {
+                collectionTimeSlotSelect.value = tempCart.collection_time_slot;
+            }
+            
+            // Initialiser les articles
+            if (tempCart.articles && Object.keys(tempCart.articles).length > 0) {
+                const articlesData = typeof tempCart.articles === 'string' 
+                    ? JSON.parse(tempCart.articles) 
+                    : tempCart.articles;
+                
+                for (const articleId in articlesData) {
+                    const article = articlesData[articleId];
+                    const quantity = article.quantity || 0;
+                    
+                    const quantityInput = document.querySelector(`input[name="articles[${articleId}][quantity]"]`);
+                    if (quantityInput && quantity > 0) {
+                        quantityInput.value = quantity;
+                    }
+                }
+                
+                // Mettre à jour les totaux
+                updateTotal();
+            }
+            
+            // Initialiser la méthode de paiement
+            if (tempCart.payment_method) {
+                const paymentMethodRadio = document.querySelector(`input[name="payment_method"][value="${tempCart.payment_method}"]`);
+                if (paymentMethodRadio) {
+                    paymentMethodRadio.checked = true;
+                }
+            }
+            
+            // Initialiser la date de livraison
+            const deliveryDateInput = document.getElementById('delivery_date_input');
+            if (deliveryDateInput && tempCart.delivery_date) {
+                deliveryDateInput.value = tempCart.delivery_date;
+            }
+            
+            const deliveryTimeSlotSelect = document.getElementById('delivery_time_slot');
+            if (deliveryTimeSlotSelect && tempCart.delivery_time_slot) {
+                deliveryTimeSlotSelect.value = tempCart.delivery_time_slot;
+            }
+            
+            // Afficher l'étape actuelle
+            showStep(currentStepIndex);
+        }
+        
+        // Initialisation
+        initFromTempCart();
+        if (currentStepIndex === 0) {
+            showStep(0); // Ne montrer l'étape 0 que si nous n'avons pas restauré d'étape
+        }
+        
+        updateTotal(); // Calcul initial
+        if (sameAddressCheckbox) sameAddressCheckbox.dispatchEvent(new Event('change')); // Sync delivery fields display
+
+        // Dans la partie JavaScript, remplacer la fonction updateDeliveryDate
+        function updateDeliveryDate() {
+            const collectionDateInput = document.getElementById('collection_date');
+            const deliveryDateInput = document.getElementById('delivery_date_input');
+            
+            if (collectionDateInput && collectionDateInput.value && deliveryDateInput) {
+                // Calculer la date minimum de livraison (collecte + 1 jour)
+                const collectionDate = new Date(collectionDateInput.value);
+                const minDeliveryDate = new Date(collectionDate);
+                minDeliveryDate.setDate(minDeliveryDate.getDate() + 1);
+                
+                // Formater pour l'attribut min du champ date (YYYY-MM-DD)
+                const minDateString = minDeliveryDate.toISOString().split('T')[0];
+                deliveryDateInput.min = minDateString;
+                
+                // Si la date de livraison actuelle est vide ou avant la date minimale, mettre à jour
+                if (!deliveryDateInput.value || new Date(deliveryDateInput.value) < minDeliveryDate) {
+                    deliveryDateInput.value = minDateString;
+                }
+                
+                // Mettre à jour le champ caché
+                const hiddenDeliveryDate = document.getElementById('delivery_date');
+                if (hiddenDeliveryDate) {
+                    hiddenDeliveryDate.value = deliveryDateInput.value;
+                }
+            }
+        }
+
+        // Mettre à jour le gestionnaire d'événements pour la date de collecte
+        document.getElementById('collection_date').addEventListener('change', function() {
+            updateDeliveryDate();
+        });
+
+        // Ajouter un écouteur d'événements sur la date de livraison
+        document.getElementById('delivery_date_input').addEventListener('change', function() {
+            // Mettre à jour le champ caché
+            const hiddenDeliveryDate = document.getElementById('delivery_date');
+            if (hiddenDeliveryDate) {
+                hiddenDeliveryDate.value = this.value;
+            }
+        });
+    });
+</script>
+@endpush

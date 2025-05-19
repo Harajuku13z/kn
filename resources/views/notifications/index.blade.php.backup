@@ -1,0 +1,282 @@
+@extends('layouts.dashboard')
+
+@section('title', 'Notifications - KLINKLIN')
+
+@section('content')
+<div class="dashboard-content">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-3">Mes notifications</h2>
+            <p class="text-muted">Consultez vos messages et alertes récentes</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            @if($notifications->where('read_at', null)->count() > 0)
+                <form action="{{ route('notifications.mark-all-read') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="bi bi-check-all me-2"></i> Tout marquer comme lu
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div class="row">
+        <!-- Colonne principale pour les notifications -->
+        <div class="col-lg-8">
+            @if($notifications->isEmpty())
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center p-5">
+                        <i class="bi bi-bell-slash fs-1 text-muted mb-3"></i>
+                        <h4>Aucune notification</h4>
+                        <p class="text-muted mb-0">Vous n'avez aucune notification à afficher pour le moment.</p>
+                    </div>
+                </div>
+            @else
+                <!-- Notifications actives -->
+                <div class="row">
+                    @foreach($notifications as $notification)
+                        @php
+                            // Determine notification type and set appropriate styling
+                            $notificationType = $notification->data['color'] ?? 'info';
+                            
+                            switch ($notificationType) {
+                                case 'success':
+                                    $bgColor = '#edfff7';
+                                    $headerBgColor = '#89ffcb';
+                                    $textColor = '#207054';
+                                    $iconClass = $notification->data['icon'] ?? 'bi-check-circle-fill';
+                                    break;
+                                case 'warning':
+                                    $bgColor = '#fffce7';
+                                    $headerBgColor = '#fbe133';
+                                    $textColor = '#856404';
+                                    $iconClass = $notification->data['icon'] ?? 'bi-exclamation-triangle-fill';
+                                    break;
+                                case 'danger':
+                                    $bgColor = '#fff5f3';
+                                    $headerBgColor = '#f25f4d';
+                                    $textColor = '#721c24';
+                                    $iconClass = $notification->data['icon'] ?? 'bi-x-octagon-fill';
+                                    break;
+                                case 'info':
+                                default:
+                                    $bgColor = '#f8f5fc';
+                                    $headerBgColor = '#461871';
+                                    $textColor = '#2a0e42';
+                                    $iconClass = $notification->data['icon'] ?? 'bi-info-circle-fill';
+                                    break;
+                            }
+                        @endphp
+                        
+                        <div class="col-12 mb-3">
+                            <div class="card border-0 shadow-sm notification-card {{ !$notification->read_at ? 'unread' : '' }}" 
+                                 style="{{ !$notification->read_at ? '' : 'opacity: 0.8;' }}">
+                                <div class="card-header d-flex justify-content-between align-items-center" 
+                                     style="background-color: {{ $headerBgColor }}; color: {{ $notificationType == 'info' ? 'white' : $textColor }}; padding: 0.75rem 1.25rem; width: 100%;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi {{ $iconClass }} me-2"></i>
+                                        <h5 class="mb-0 fw-bold">{{ $notification->data['title'] ?? 'Notification' }}</h5>
+                                    </div>
+                                    <div>
+                                        @if(!$notification->read_at)
+                                            <span class="badge bg-danger">Non lue</span>
+                                        @else
+                                            <span class="badge bg-secondary">Lue</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="card-body p-4" style="background-color: {{ $bgColor }};">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <p class="mb-3 notification-message {{ !$notification->read_at ? 'fw-bold' : '' }}">
+                                                {{ $notification->data['message'] ?? 'Notification' }}
+                                            </p>
+                                            
+                                            @if(isset($notification->data['details']))
+                                                <div class="notification-details mb-3">
+                                                    <p class="mb-0">{{ $notification->data['details'] }}</p>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="notification-meta d-flex justify-content-between align-items-center">
+                                                <div class="notification-time">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    {{ $notification->created_at->format('d/m/Y à H:i') }} 
+                                                    <span class="notification-age">({{ $notification->created_at->diffForHumans() }})</span>
+                                                </div>
+                                                <div>
+                                                    <a href="{{ route('notifications.read', $notification->id) }}" class="btn btn-sm btn-light-purple">
+                                                        <i class="bi bi-eye-fill me-1"></i> 
+                                                        {{ !$notification->read_at ? 'Marquer comme lue' : 'Détails' }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                @if ($notifications->hasPages())
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $notifications->links() }}
+                    </div>
+                @endif
+            @endif
+        </div>
+        
+        <!-- Colonne latérale pour le résumé et les filtres -->
+        <div class="col-lg-4">
+            <!-- Carte d'informations -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white" style="padding: 0.75rem 1.25rem; width: 100%;">
+                    <h5 class="mb-0">Résumé</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Total:</span>
+                        <span class="badge bg-primary px-3 py-2">{{ $notifications->total() }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Non lues:</span>
+                        <span class="badge bg-danger px-3 py-2">{{ $notifications->where('read_at', null)->count() }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Lues:</span>
+                        <span class="badge bg-success px-3 py-2">{{ $notifications->whereNotNull('read_at')->count() }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtre de notifications -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white" style="padding: 0.75rem 1.25rem; width: 100%;">
+                    <h5 class="mb-0">Filtres</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">Type de notification</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="filter-all" checked>
+                            <label class="form-check-label" for="filter-all">Toutes les notifications</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="filter-unread">
+                            <label class="form-check-label" for="filter-unread">Non lues uniquement</label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Catégorie</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="category-all" checked>
+                            <label class="form-check-label" for="category-all">Toutes les catégories</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="category-order">
+                            <label class="form-check-label" for="category-order">Commandes</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="category-subscription">
+                            <label class="form-check-label" for="category-subscription">Abonnements</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="category-address">
+                            <label class="form-check-label" for="category-address">Adresses</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Carte d'aide -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white" style="padding: 0.75rem 1.25rem; width: 100%;">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i> Les notifications vous informent des événements importants concernant vos commandes, abonnements et autres activités sur KLINKLIN.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('styles')
+<style>
+    .notification-card.unread {
+        border-left: 4px solid #f26d50 !important;
+    }
+    
+    .notification-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .notification-age {
+        color: #919aa1;
+        font-size: 0.85rem;
+    }
+    
+    .card-header {
+        border-bottom: none;
+    }
+    
+    /* Improved pagination styling */
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: var(--primary-purple);
+        border-radius: 50px;
+        margin: 0 2px;
+        border: none;
+        background-color: #f8f9fa;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: var(--accent-color-1);
+        transform: translateY(-2px);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: var(--primary-purple);
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: #f8f9fa;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filtrage des notifications (à implémenter en JavaScript)
+        const filterUnread = document.getElementById('filter-unread');
+        const filterAll = document.getElementById('filter-all');
+        
+        // Cette fonctionnalité pourrait être développée davantage
+        // pour filtrer dynamiquement les notifications sans rechargement de page
+    });
+</script>
+@endpush
+@endsection 

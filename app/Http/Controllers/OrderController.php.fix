@@ -1,0 +1,10 @@
+            // Traitement spécifique selon le type de commande
+            if ($request->order_type === 'kilogram') {
+                // Récupérer les articles sélectionnés pour la commande au kilo
+                $selectedArticles = [];
+                $pricePerKg = PriceConfiguration::getCurrentPricePerKg(1000); // Using the new method
+                
+                foreach ($request->articles as $articleId => $data) {
+                    // Add logic to handle the selected articles
+                }
+            } 

@@ -1,0 +1,72 @@
+/* Custom styles for the order management system */
+
+:root {
+    --app-primary-color: #4A148C; /* Violet principal */
+    --app-secondary-color: #6c757d; 
+    --app-cancel-color: #FF7043;   /* Orange/Corail */
+    --app-light-bg: #f8f9fa;      
+    --app-progress-inactive: #e0e0e0;
+    --app-progress-text-inactive: #aaa;
+}
+
+.form-step {
+    display: none; 
+}
+.form-step.active {
+    display: block;
+    animation: fadeIn 0.5s; 
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.progress-bar-custom .step-custom {
+    flex-basis: 100px; 
+    flex-shrink: 0;
+    color: var(--app-progress-text-inactive);
+    font-size: 0.85em;
+}
+
+.progress-bar-custom .step-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--app-progress-inactive);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 8px auto;
+    border: 2px solid var(--app-progress-inactive);
+    font-weight: bold;
+}
+
+.progress-bar-custom .step-custom.active .step-icon {
+    background-color: var(--app-primary-color);
+    border-color: var(--app-primary-color);
+}
+.progress-bar-custom .step-custom.active .step-text {
+    color: var(--app-primary-color);
+    font-weight: bold;
+}
+
+.progress-bar-custom .step-custom.completed .step-icon {
+    background-color: var(--app-primary-color); 
+    border-color: var(--app-primary-color);
+    color: white;
+}
+.progress-bar-custom .step-custom.completed .step-text {
+    color: var(--app-primary-color); 
+}
+
+.progress-bar-custom .progress-line-custom {
+    height: 4px;
+    background-color: var(--app-progress-inactive);
+    margin-top: 15px; 
+}
+
+.progress-bar-custom .progress-line-custom.active {
+    background-color: var(--app-primary-color);
+} 
